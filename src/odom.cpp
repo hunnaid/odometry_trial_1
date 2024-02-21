@@ -16,21 +16,23 @@ Point Odom::localDeltaPoint = {0, 0};
 
 // SENSOR VALUES
 // motor values
-double Odom::leftfWheelPos = 0.0;
-double Odom::rightfWheelPos = 0.0;
-double Odom::leftbWheelPos = 0.0;  // Separate left back wheel motor
-double Odom::rightbWheelPos = 0.0; // Separate right back wheel motor
+double Odom::leftfWheelPos = LFMotor.position(degrees);
+double Odom::rightfWheelPos = RFMotor.position(degrees);// Separate right back wheel motor
 // angle
 double Odom::currentAngle = imu.heading(degrees);
 double Odom::prevAngle = 0.0;
 
+double Odom::prevLeftfWheelPos = 0.0;
+double Odom::prevRightfWheelPos = 0.0;
+
+double Odom::deltaAngle = currentAngle - prevAngle;
 // ODOMETRY FUNCTIONS
 void Odom::updateSensors() {
+  leftfWheelPos = LFMotor.position(degrees);
+  rightfWheelPos = RFMotor.position(degrees);
   // Replace encoder values with motor values
   double leftMotorDelta = leftfWheelPos - prevLeftfWheelPos;
   double rightMotorDelta = rightfWheelPos - prevRightfWheelPos;
-  double leftBackMotorDelta = leftbWheelPos - prevLeftbWheelPos;  // Separate right back wheel motor
-  double rightBackMotorDelta = rightbWheelPos - prevRightbWheelPos; // Separate left back wheel motor
 
   // Update angle
   deltaAngle = currentAngle - prevAngle;
@@ -39,11 +41,10 @@ void Odom::updateSensors() {
   // Update motor values
   double leftWheelDelta = leftMotorDelta;
   double rightWheelDelta = rightMotorDelta;
-  double backWheelDelta = (leftBackMotorDelta + rightBackMotorDelta) / 2; // Average of left and right back wheels
 
   // Polar coordinates
-  localDeltaPoint.x = (deltaAngle + (backWheelDelta / backEncOffset)) * backEncOffset;
-  localDeltaPoint.y = (leftWheelDelta + rightWheelDelta) / 2;
+  localDeltaPoint.x = (rightWheelDelta + leftWheelDelta) / 2.0;
+  localDeltaPoint.y = (rightWheelDelta - leftWheelDelta) / 2.0;
 
   // Cartesian coordinates
   globalX += (localDeltaPoint.y * sin(prevAngle + deltaAngle / 2)) + (localDeltaPoint.x * cos(prevAngle + deltaAngle / 2));
@@ -53,18 +54,14 @@ void Odom::updateSensors() {
   // Update previous motor values
   prevLeftfWheelPos = leftfWheelPos;
   prevRightfWheelPos = rightfWheelPos;
-  prevLeftbWheelPos = leftbWheelPos;
-  prevRightbWheelPos = rightbWheelPos;
 }
 
 void Odom::reset() {
   leftfWheelPos = 0.0;
   rightfWheelPos = 0.0;
-  leftbWheelPos = 0.0;
-  rightbWheelPos = 0.0;
-  prevAngle = 0.0;
-  prevGlobalX = 0.0;
-  prevGlobalY = 0.0;
+  prevAngle = globalAngle;
+  prevGlobalX = globalX;
+  prevGlobalY = globalY;
 }
 
 void Odom::setPosition(double newX, double newY, double newAngle) {
@@ -77,6 +74,7 @@ void Odom::setPosition(double newX, double newY, double newAngle) {
 // ODOMETRY THREAD
 int Odom::Odometry() {
   while (true) {
+
     Odom::updateSensors();
     // Print or use globalX, globalY, globalAngle as needed
 

@@ -40,6 +40,10 @@ int strafe=0;
 /*  not every time that the robot is disabled.                               */
 /*---------------------------------------------------------------------------*/
 
+Odom odom{
+
+};
+
 void pre_auton(void) {
   imu.calibrate();
   waitUntil(6000);
@@ -240,11 +244,17 @@ void autonomous(void) {
 void usercontrol(void) {
 
   Brain.Screen.clearScreen();
+  imu.calibrate();
 
   // place driver control in this while loop
   while (true) {
     Brain.Screen.clearScreen();
     Brain.Screen.clearLine();
+    Brain.Screen.setCursor(1, 1);
+    Brain.Screen.print(Odom::globalX);
+    Brain.Screen.setCursor(2, 1);
+    Brain.Screen.print(Odom::globalY);
+    Brain.Screen.setCursor(3, 1);
     Brain.Screen.print(imu.heading(degrees));
 
     //Drive
@@ -261,15 +271,6 @@ void usercontrol(void) {
   }
 }
 
-double odom() {
-  Brain.Screen.print(Odom::globalX);
-  Brain.Screen.print(Odom::globalY);
-  imu.calibrate();
-  Brain.Screen.print(imu.heading(degrees));
-
-  // Instantiate and return an Odom object with appropriate values
-  return 0.0;
-}
 //
 // Main will set up the competition functions and callbacks.
 //
@@ -277,10 +278,11 @@ int main() {
   // Set up callbacks for autonomous and driver control periods.
   Competition.autonomous(autonomous);
   Competition.drivercontrol(usercontrol);
+  odom.Odometry();
 
   // Run the pre-autonomous function.
   pre_auton();
-  odom();
+  //odom();
   // Prevent main from exiting with an infinite loop.
   while (true) {
     wait(100, msec);
