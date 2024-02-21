@@ -4,6 +4,10 @@
 
 using namespace vex;
 
+// constants
+const double wheelDiameter = 3.0; // inches
+const double wheelCircumference = 3.141592653589793 * wheelDiameter;
+
 // GLOBAL COORDINATES
 double Odom::globalX = 0.0;
 double Odom::globalY = 0.0;
@@ -39,16 +43,19 @@ void Odom::updateSensors() {
   prevAngle = currentAngle;
 
   // Update motor values
-  double leftWheelDelta = leftMotorDelta;
-  double rightWheelDelta = rightMotorDelta;
+  double leftWheelDelta = leftMotorDelta * (wheelCircumference / 360.0);
+  double rightWheelDelta = rightMotorDelta * (wheelCircumference / 360.0);
 
   // Polar coordinates
   localDeltaPoint.x = (rightWheelDelta + leftWheelDelta) / 2.0;
   localDeltaPoint.y = (rightWheelDelta - leftWheelDelta) / 2.0;
 
   // Cartesian coordinates
-  globalX += (localDeltaPoint.y * sin(prevAngle + deltaAngle / 2)) + (localDeltaPoint.x * cos(prevAngle + deltaAngle / 2));
-  globalY += (localDeltaPoint.y * cos(prevAngle + deltaAngle / 2)) - (localDeltaPoint.x * sin(prevAngle + deltaAngle / 2));
+  //globalX += (localDeltaPoint.y * sin(prevAngle + deltaAngle / 2)) + (localDeltaPoint.x * cos(prevAngle + deltaAngle / 2));
+  //globalY += (localDeltaPoint.y * cos(prevAngle + deltaAngle / 2)) - (localDeltaPoint.x * sin(prevAngle + deltaAngle / 2));
+  globalX += localDeltaPoint.x * cos(globalAngle) - localDeltaPoint.y * sin(globalAngle);
+  globalY += localDeltaPoint.x * sin(globalAngle) + localDeltaPoint.y * cos(globalAngle);
+
   globalAngle = currentAngle;
 
   // Update previous motor values

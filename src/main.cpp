@@ -244,7 +244,6 @@ void autonomous(void) {
 void usercontrol(void) {
 
   Brain.Screen.clearScreen();
-  imu.calibrate();
 
   // place driver control in this while loop
   while (true) {
@@ -275,6 +274,7 @@ void usercontrol(void) {
 // Main will set up the competition functions and callbacks.
 //
 int main() {
+  imu.calibrate();
   // Set up callbacks for autonomous and driver control periods.
   Competition.autonomous(autonomous);
   Competition.drivercontrol(usercontrol);
