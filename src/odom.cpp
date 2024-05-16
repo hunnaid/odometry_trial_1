@@ -34,13 +34,17 @@ double Odom::deltaAngle = currentAngle - prevAngle;
 void Odom::updateSensors() {
   leftfWheelPos = LFMotor.position(degrees);
   rightfWheelPos = RFMotor.position(degrees);
+  currentAngle = imu.heading(degrees);
+
   // Replace encoder values with motor values
   double leftMotorDelta = leftfWheelPos - prevLeftfWheelPos;
   double rightMotorDelta = rightfWheelPos - prevRightfWheelPos;
 
   // Update angle
-  deltaAngle = currentAngle - prevAngle;
   prevAngle = currentAngle;
+  deltaAngle = currentAngle - prevAngle;
+  if (deltaAngle > 180) deltaAngle -= 360;
+  if (deltaAngle < -180) deltaAngle += 360;
 
   // Update motor values
   double leftWheelDelta = leftMotorDelta * (wheelCircumference / 360.0);
@@ -85,6 +89,14 @@ int Odom::Odometry() {
     Odom::updateSensors();
     // Print or use globalX, globalY, globalAngle as needed
 
+    Brain.Screen.clearScreen();
+    Brain.Screen.clearLine();
+    Brain.Screen.setCursor(1, 1);
+    Brain.Screen.print(Odom::globalX);
+    Brain.Screen.setCursor(2, 1);
+    Brain.Screen.print(Odom::globalY);
+    Brain.Screen.setCursor(3, 1);
+    Brain.Screen.print(imu.heading(degrees));
     this_thread::sleep_for(10);
   }
   return 0;
